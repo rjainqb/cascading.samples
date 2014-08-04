@@ -16,6 +16,9 @@ sourceSets {
   }
 }
 
+ext.hadoopVersion = "2.2.0"
+ext.cascadingVersion = "2.5.5"
+
 repositories {
   mavenLocal()
   mavenCentral()
