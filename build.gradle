@@ -6,6 +6,7 @@
 
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: 'eclipse'
 
 evaluationDependsOn( 'logparser' )
 evaluationDependsOn( 'loganalysis' )
@@ -15,8 +16,8 @@ evaluationDependsOn( 'hadoop' )
 repositories {
   mavenLocal()
   mavenCentral()
-  mavenRepo name: 'conjars', url: 'http://conjars.org/repo/'
-  mavenRepo name: 'apache', url: 'https://repository.apache.org/content/repositories/releases/'
+  maven { url 'http://conjars.org/repo/' }
+  maven { url 'https://repository.apache.org/content/repositories/releases/' }
 }
 
 if( project.properties[ 'teamcity' ] ) // make them system properties
@@ -33,7 +34,7 @@ if( System.properties[ 'aws.properties' ] )
 
 def hadoopHome = System.properties[ 'hadoop.home' ]
 
-ext.cascadingVersionMajor = '2.5'
+ext.cascadingVersionMajor = '3.0.0-wip-+'
 
 ext.commandLines = [
         logparser: "jar logparser.jar data/apache.200.txt output",
@@ -86,7 +87,7 @@ subprojects {
   }
 
   execSample << {
-    assert fileTree( execPath ).include( '**/part-00000' ).getFiles().size() == numParts[ project.name ]
+    assert fileTree( execPath ).include( '**/_SUCCESS' ).getFiles().size() == numParts[ project.name ]
     println "${project.name} PASSED exec dist tests"
   }
 

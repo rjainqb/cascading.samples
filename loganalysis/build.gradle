@@ -6,44 +6,56 @@
 
 import java.text.SimpleDateFormat
 
+buildscript {
+  repositories {
+    maven { url 'http://repo.spring.io/plugins-release' }
+  }
+  dependencies {
+    classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.5'
+  }
+}
+
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 
-sourceSets {
-  main {
-    java.srcDir 'src/java'
-  }
-}
+apply plugin: 'propdeps'
+apply plugin: 'propdeps-maven'
+apply plugin: 'propdeps-idea'
+apply plugin: 'propdeps-eclipse'
 
-ext.hadoopVersion = "2.2.0"
-ext.cascadingVersion = "2.5.5"
+ext.hadoopVersion = "2.4.0"
+ext.tezVersion = "0.5.0"
+ext.cascadingVersion = "3.0.0-wip-+"
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 repositories {
   mavenLocal()
   mavenCentral()
-  mavenRepo name: 'conjars', url: 'http://conjars.org/repo/'
+  maven { url 'http://conjars.org/repo/' }
+  maven { url 'https://repository.apache.org/content/repositories/releases/' }
 }
 
 dependencies {
   compile group: 'cascading', name: 'cascading-core', version: cascadingVersion
   compile group: 'cascading', name: 'cascading-xml', version: cascadingVersion
-  compile group: 'cascading', name: 'cascading-hadoop2-mr1', version: cascadingVersion
+  compile group: 'cascading', name: 'cascading-hadoop2-tez', version: cascadingVersion
+
+  provided( group: 'org.apache.hadoop', name: 'hadoop-mapreduce-client-core', version: hadoopVersion )
+  provided( group: 'org.apache.hadoop', name: 'hadoop-common', version: hadoopVersion )
+  provided( group: 'org.apache.hadoop', name: 'hadoop-hdfs', version: hadoopVersion )
 
   // these runtime deps allow the sample app to be run in an ide
 
-  runtime group: 'org.slf4j', name: 'slf4j-api', version: '1.6.1'
-  runtime group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.6.1'
+  runtime group: 'org.slf4j', name: 'slf4j-api', version: '1.7.2'
+  runtime group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.2'
 
-  runtime( group: 'org.apache.hadoop', name: 'hadoop-common', version: hadoopVersion )
-  runtime( group: 'org.apache.hadoop', name: 'hadoop-client', version: hadoopVersion )
-
-  runtime group: 'commons-io', name: 'commons-io', version: '2.1'
-
-  runtime group: 'javax.ws.rs', name: 'jsr311-api', version: '1.1.1'
-
-  testCompile( group: 'org.apache.hadoop', name: 'hadoop-mapreduce-client-core', version: hadoopVersion )
-  testCompile( group: 'org.apache.hadoop', name: 'hadoop-minicluster', version: hadoopVersion )
+  // hadoop deps
+  runtime group: 'org.apache.tez', name: 'tez-api', version: tezVersion
+  runtime group: 'org.apache.tez', name: 'tez-dag', version: tezVersion
+  runtime group: 'org.apache.tez', name: 'tez-mapreduce', version: tezVersion
 }
 
 jar {
@@ -65,8 +77,8 @@ task distCopy( type: Copy, dependsOn: jar ) {
 
   from 'README.TXT'
   from 'build.gradle'
-  from( 'src' ) {into 'src'}
-  from( 'data' ) {into 'data'}
+  from( 'src' ) { into 'src' }
+  from( 'data' ) { into 'data' }
 
   from "$buildDir/libs"
 

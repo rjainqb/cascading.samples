@@ -9,16 +9,18 @@ package logparser;
 import java.util.Properties;
 
 import cascading.flow.Flow;
-import cascading.flow.hadoop.HadoopFlowConnector;
+import cascading.flow.FlowDef;
+import cascading.flow.FlowRuntimeProps;
+import cascading.flow.tez.Hadoop2TezFlowConnector;
 import cascading.operation.regex.RegexParser;
 import cascading.pipe.Each;
 import cascading.pipe.Pipe;
 import cascading.property.AppProps;
+import cascading.scheme.hadoop.TextDelimited;
 import cascading.scheme.hadoop.TextLine;
 import cascading.tap.SinkMode;
 import cascading.tap.Tap;
 import cascading.tap.hadoop.Hfs;
-import cascading.tap.hadoop.Lfs;
 import cascading.tuple.Fields;
 
 /**
@@ -32,10 +34,10 @@ public class Main
     String outputPath = args[ 1 ];
 
     // define what the input file looks like, "offset" is bytes from beginning
-    TextLine scheme = new TextLine( new Fields( "offset", "line" ) );
+    TextLine rawLogScheme = new TextLine( new Fields( "offset", "line" ) );
 
-    // create SOURCE tap to read a resource from the local file system, if input is not an URL
-    Tap logTap = inputPath.matches( "^[^:]+://.*" ) ? new Hfs( scheme, inputPath ) : new Lfs( scheme, inputPath );
+    // create SOURCE tap to read a resource from the current file system or HTTP URL
+    Tap logTap = new Hfs( rawLogScheme, inputPath );
 
     // create an assembly to parse an Apache log file and store on an HDFS cluster
 
@@ -45,36 +47,46 @@ public class Main
     // define the regular expression to parse the log file with
     String apacheRegex = "^([^ ]*) +[^ ]* +[^ ]* +\\[([^]]*)\\] +\\\"([^ ]*) ([^ ]*) [^ ]*\\\" ([^ ]*) ([^ ]*).*$";
 
-    // declare the groups from the above regex we want to keep. each regex group will be given
-    // a field name from 'apacheFields', above, respectively
-    int[] allGroups = {1, 2, 3, 4, 5, 6};
-
     // create the parser
-    RegexParser parser = new RegexParser( apacheFields, apacheRegex, allGroups );
+    RegexParser parser = new RegexParser( apacheFields, apacheRegex );
 
     // create the import pipe element, with the name 'import', and with the input argument named "line"
     // replace the incoming tuple with the parser results
     // "line" -> parser -> "ts"
     Pipe importPipe = new Each( "import", new Fields( "line" ), parser, Fields.RESULTS );
 
-    // create a SINK tap to write to the default filesystem
-    // by default, TextLine writes all fields out
-    Tap remoteLogTap = new Hfs( new TextLine(), outputPath, SinkMode.REPLACE );
+    // define the output, include a header with field names dynamically, TAB delimited
+    TextDelimited parsedLogScheme = new TextDelimited( Fields.ALL, true, "\t" );
 
-    // set the current job jar
-    Properties properties = new Properties();
-    AppProps.setApplicationJarClass( properties, Main.class );
+    // create a SINK tap to write to the default filesystem
+    Tap parsedLogTap = new Hfs( parsedLogScheme, outputPath, SinkMode.REPLACE );
+
+    Properties properties = AppProps.appProps()
+      .setJarClass( Main.class ) // set the current job jar
+      .buildProperties();
+
+    properties = FlowRuntimeProps.flowRuntimeProps()
+      .setGatherPartitions( 4 ) // level of parallelization during the gather stage
+      .buildProperties( properties );
+
+    // define the assembly
+    FlowDef flowDef = FlowDef.flowDef()
+      .addSource( "import", logTap )
+      .addSink( "import", parsedLogTap )
+      .addTail( importPipe );
 
     // connect the assembly to the SOURCE and SINK taps
-    Flow parsedLogFlow = new HadoopFlowConnector( properties ).connect( logTap, remoteLogTap, importPipe );
+    Flow parsedLogFlow = new Hadoop2TezFlowConnector( properties ).connect( flowDef );
 
     // optionally print out the parsedLogFlow to a DOT file for import into a graphics package
     // parsedLogFlow.writeDOT( "logparser.dot" );
 
-    // start execution of the flow (either locally or on the cluster
+    // start execution of the flow (either locally or on the cluster)
     parsedLogFlow.start();
 
     // block until the flow completes
     parsedLogFlow.complete();
+
+    System.exit( 0 ); // known issue with Tez 0.5.0 in local mode
     }
   }
