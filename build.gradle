@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2014 Concurrent, Inc. All Rights Reserved.
+ * Copyright (c) 2007-2013 Concurrent, Inc. All Rights Reserved.
  *
  * Project and contact information: http://www.concurrentinc.com/
  */
@@ -15,8 +15,18 @@ evaluationDependsOn( 'hadoop' )
 repositories {
   mavenLocal()
   mavenCentral()
-  mavenRepo name: 'conjars', url: 'http://conjars.org/repo/'
-  mavenRepo name: 'apache', url: 'https://repository.apache.org/content/repositories/releases/'
+  maven {
+      url 'http://conjars.org/repo/'
+  }
+  maven {
+      url 'https://repository.apache.org/content/repositories/releases/'
+  }
+  maven {
+      url 'http://maven-qubole.s3-website-us-east-1.amazonaws.com/maven/release'
+  }
+  maven {
+      url 'http://maven-qubole.s3-website-us-east-1.amazonaws.com/maven/snapshot'
+  }
 }
 
 if( project.properties[ 'teamcity' ] ) // make them system properties
@@ -33,7 +43,7 @@ if( System.properties[ 'aws.properties' ] )
 
 def hadoopHome = System.properties[ 'hadoop.home' ]
 
-ext.cascadingVersionMajor = '2.6'
+ext.cascadingVersionMajor = '2.2'
 
 ext.commandLines = [
         logparser: "jar logparser.jar data/apache.200.txt output",

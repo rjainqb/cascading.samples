@@ -11,3 +11,5 @@ javadoc
 *.ipr
 .gradle
 output
+.idea
+local

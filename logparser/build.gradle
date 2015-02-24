@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2014 Concurrent, Inc. All Rights Reserved.
+ * Copyright (c) 2007-2013 Concurrent, Inc. All Rights Reserved.
  *
  * Project and contact information: http://www.concurrentinc.com/
  */
@@ -10,40 +10,53 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 
+ext.cascadingVersion = '2.2.+'
+ext.hadoopVersion = '0.20.1-dev'
+
 sourceSets {
   main {
     java.srcDir 'src/java'
   }
 }
 
-ext.hadoopVersion = "2.4.1"
-ext.cascadingVersion = "2.6.0-wip-+"
-
 repositories {
   mavenLocal()
   mavenCentral()
-  mavenRepo name: 'conjars', url: 'http://conjars.org/repo/'
+    maven {
+        url 'http://conjars.org/repo/'
+    }
+    maven {
+        url 'https://repository.apache.org/content/repositories/releases/'
+    }
+    maven {
+        url 'http://maven-qubole.s3-website-us-east-1.amazonaws.com/maven/release'
+    }
+    maven {
+        url 'http://maven-qubole.s3-website-us-east-1.amazonaws.com/maven/snapshot'
+    }
 }
 
 dependencies {
   compile group: 'cascading', name: 'cascading-core', version: cascadingVersion
   compile group: 'cascading', name: 'cascading-xml', version: cascadingVersion
-  compile group: 'cascading', name: 'cascading-hadoop2-mr1', version: cascadingVersion
+  compile group: 'cascading', name: 'cascading-hadoop', version: cascadingVersion
+    compile group: 'com.qubole', name: 'hadoop', version: hadoopVersion
 
   // these runtime deps allow the sample app to be run in an ide
 
-  runtime group: 'org.slf4j', name: 'slf4j-api', version: '1.7.5'
-  runtime group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.5'
+  runtime group: 'org.slf4j', name: 'slf4j-api', version: '1.6.1'
+  runtime group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.6.1'
 
   // hadoop deps
-  runtime( group: 'org.apache.hadoop', name: 'hadoop-common', version: hadoopVersion )
-  runtime( group: 'org.apache.hadoop', name: 'hadoop-client', version: hadoopVersion )
+  runtime( group: 'org.apache.hadoop', name: 'hadoop-core', version: hadoopVersion ) {
+    exclude group: 'ant'
+    exclude group: 'junit'
+  }
+
+  runtime group: 'org.apache.hadoop', name: 'hadoop-test', version: hadoopVersion
   runtime group: 'commons-io', name: 'commons-io', version: '2.1'
 
   runtime group: 'javax.ws.rs', name: 'jsr311-api', version: '1.1.1'
-
-  testCompile( group: 'org.apache.hadoop', name: 'hadoop-mapreduce-client-core', version: hadoopVersion )
-  testCompile( group: 'org.apache.hadoop', name: 'hadoop-minicluster', version: hadoopVersion )
 }
 
 jar {
