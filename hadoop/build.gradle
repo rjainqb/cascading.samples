@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2014 Concurrent, Inc. All Rights Reserved.
+ * Copyright (c) 2007-2013 Concurrent, Inc. All Rights Reserved.
  *
  * Project and contact information: http://www.concurrentinc.com/
  */
@@ -18,12 +18,22 @@ sourceSets {
 repositories {
   mavenLocal()
   mavenCentral()
-  mavenRepo name: 'conjars', url: 'http://conjars.org/repo/'
-  mavenRepo name: 'apache', url: 'https://repository.apache.org/content/repositories/releases/'
+    maven {
+        url 'http://conjars.org/repo/'
+    }
+    maven {
+        url 'https://repository.apache.org/content/repositories/releases/'
+    }
+    maven {
+        url 'http://maven-qubole.s3-website-us-east-1.amazonaws.com/maven/release'
+    }
+    maven {
+        url 'http://maven-qubole.s3-website-us-east-1.amazonaws.com/maven/snapshot'
+    }
 }
 
 dependencies {
-  compile( 'org.apache.hadoop:hadoop-core:1.2.1' )
+  compile( 'com.qubole:hadoop:0.20.1-dev' )
 }
 
 jar {
