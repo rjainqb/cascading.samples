@@ -1,4 +1,4 @@
-To use, make sure Hadoop 2 is in your path and, optionally, HADOOP_CONF is set.
+To use, make sure Hadoop is in your path and, optionally, HADOOP_CONF is set.
 
 From the downloaded archive execute,
 
