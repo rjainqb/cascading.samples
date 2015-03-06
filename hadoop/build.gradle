@@ -33,7 +33,7 @@ repositories {
 }
 
 dependencies {
-  compile( 'com.qubole:hadoop:0.20.1-dev' )
+  compile( 'com.qubole:hadoop-core:0.20.1-dev' )
 }
 
 jar {
